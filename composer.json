@@ -1,0 +1,30 @@
+{
+    "name": "low-web/service",
+    "description": "rest_kit",
+    "type": "library",
+    "authors": [
+        {
+            "name": "silence6security9utopia",
+            "email": "silence6sikle9utopia@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^7.4",
+        "ext-json": "*",
+        "illuminate/database": "^8.0",
+        "illuminate/container": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Silence\\Service\\": ""
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TestSpace\\": "test_space"
+        }
+    },
+    "require-dev": {
+        "laravel/lumen-framework": "^8.2"
+    }
+}
