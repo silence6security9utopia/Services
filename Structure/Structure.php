@@ -78,12 +78,21 @@ abstract class Structure
         return false;
     }
 
+    /**
+     * @throws StructureException
+     */
     protected function validate()
     {
         foreach ($this->validateRules() as $property => $rule) {
             if (property_exists($this, $property)) {
-                $this->throwException(sprintf());
+                $this->throwException(sprintf('Undefind property %s, [process validation]', $property), 500);
             }
+
+            if (is_bool($res = $rule($property)) && $res === true) {
+                continue;
+            }
+
+            $this->throwException(sprintf('Property %s no valid: message = %s', $property, (string)$res));
         }
     }
 
@@ -97,9 +106,56 @@ abstract class Structure
         throw new StructureException($message.' : '.$this->getStringAlias(), $status);
     }
 
-    public function toArray(): array
+    /**
+     * @param bool $setNull
+     * @return array
+     * @throws StructureException
+     */
+    public function toArray(bool $setNull = true): array
     {
+        $base = [];
 
+        $properties = (new \ReflectionClass($this))
+            ->getProperties(\ReflectionProperty::IS_PUBLIC);
+
+        $map = $this->getMapper();
+
+        foreach ($properties as $property) {
+            $nameProperty = $property->name;
+
+            if (!$property->isInitialized($this)) {
+                $this->throwException(sprintf('Require property [%s]', $nameProperty));
+                continue;
+            }
+
+            $value = $property->getValue($this);
+
+            if ($value instanceof Structure) {
+                $base[$nameProperty] = $value->toArray($setNull);
+            } elseif (is_array($value)) {
+                $base[$nameProperty] = $map($value);
+            } else {
+                if (is_null($value)) {
+                    if ($setNull) {
+                        $base[$nameProperty] = $value;
+                    }
+                } else {
+                    $base[$nameProperty] = $value;
+                }
+            }
+        }
+
+        return $base;
+    }
+
+    /**
+     * @return \Closure
+     */
+    protected function getMapper(): \Closure
+    {
+        return $mapper = static function ($value) use (&$mapper) {
+            return array_map(static fn ($v) => (is_array($v) === true) ? $mapper($v) : (($v instanceof Structure) ? $v->toArray() : $v), $value);
+        };
     }
 
     /**
@@ -113,5 +169,10 @@ abstract class Structure
     /**
      * @return array
      */
-    protected abstract function validateRules(): array;
+    protected function validateRules(): array
+    {
+        return [
+            //
+        ];
+    }
 }

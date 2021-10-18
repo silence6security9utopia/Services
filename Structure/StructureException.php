@@ -4,8 +4,6 @@
 namespace Silence\Service\Structure;
 
 
-use Throwable;
-
 class StructureException extends \Exception
 {
     /**
@@ -15,7 +13,7 @@ class StructureException extends \Exception
      */
     public function __construct($message = "", $code = 0)
     {
-        parent::__construct($message, $code, null);
+        parent::__construct($message, $code);
     }
 
 }

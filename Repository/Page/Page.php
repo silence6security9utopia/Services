@@ -7,7 +7,9 @@ namespace Silence\Service\Repository\Page;
 use Illuminate\Support\Collection;
 
 /**
- * Class Page
+ * @method array toArray()
+ * @method string toJson($options = 0)
+ *
  * @package Silence\Service\Repository\Page
  * @see Collection
  */

@@ -15,9 +15,9 @@ class Pages
     protected Builder $query;
 
     /**
-     * @var \Closure
+     * @var \Closure|null
      */
-    protected \Closure $repoFunc;
+    protected ?\Closure $repoFunc;
 
     /**
      * @var int
@@ -37,10 +37,10 @@ class Pages
     /**
      * Pages constructor.
      * @param Builder $query
-     * @param \Closure $repoFunc
      * @param $limit
+     * @param \Closure|null $repoFunc
      */
-    public function __construct(Builder $query, \Closure $repoFunc, $limit)
+    public function __construct(Builder $query, $limit, \Closure $repoFunc = null)
     {
         $this->query = $query;
         $this->repoFunc = $repoFunc;
@@ -63,6 +63,6 @@ class Pages
             return null;
         }
 
-        return new Page($collection->map($this->repoFunc), $this);
+        return new Page($this->repoFunc?$collection->map($this->repoFunc):$collection, $this);
     }
 }
