@@ -84,11 +84,7 @@ abstract class Structure
     protected function validate()
     {
         foreach ($this->validateRules() as $property => $rule) {
-            if (property_exists($this, $property)) {
-                $this->throwException(sprintf('Undefind property %s, [process validation]', $property), 500);
-            }
-
-            if (is_bool($res = $rule($property)) && $res === true) {
+            if (is_bool($res = $rule($this->{$property})) && $res === true) {
                 continue;
             }
 
@@ -101,7 +97,7 @@ abstract class Structure
      * @param int $status
      * @throws StructureException
      */
-    protected function throwException(string $message, $status = 401)
+    protected function throwException(string $message, $status = 400)
     {
         throw new StructureException($message.' : '.$this->getStringAlias(), $status);
     }

@@ -4,7 +4,6 @@
 namespace Silence\Service\Repository;
 
 
-class RepositoryException extends \Exception
-{
+use Silence\Service\Exception\ServerException;
 
-}
+class RepositoryException extends ServerException {}

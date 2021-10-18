@@ -184,11 +184,15 @@ abstract class Repository implements IRepository
 
     /**
      * @param array $fields
-     * @return IMap
+     * @return IMap|null
      * @throws RepositoryException
      */
-    public function map(array $fields = []): IMap
+    public function map(array $fields = []): ?IMap
     {
+        if (!$this->model->exists) {
+            return null;
+        }
+
         return $this->instanceMap($fields);
     }
 

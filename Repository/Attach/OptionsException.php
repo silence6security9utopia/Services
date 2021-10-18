@@ -4,7 +4,6 @@
 namespace Silence\Service\Repository\Attach;
 
 
-class OptionsException extends \Exception
-{
+use Silence\Service\Exception\ServerException;
 
-}
+class OptionsException extends ServerException { }
