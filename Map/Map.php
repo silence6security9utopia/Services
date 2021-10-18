@@ -39,6 +39,10 @@ class Map implements IMap
         $this->fields = $fields;
     }
 
+    /**
+     * @param string $field
+     * @return Model|mixed|Page|null
+     */
     public function __get(string $field)
     {
         return $this->getAttribute($field);
@@ -87,7 +91,7 @@ class Map implements IMap
         return (new Pages(
             $collection->getQuery(),
             100,
-            ((!is_null($repoClass = $this->getRepositoryByModel($collection->getModel())))?Utils::getRepoInstanceClosure($repoClass):null)
+            ((!is_null($repoClass = $this->getRepositoryByModel($collection->getModel())))?Utils::getRepoInstanceClosure($repoClass):null),
         ))->getPage();
     }
 
@@ -133,6 +137,9 @@ class Map implements IMap
         return $base;
     }
 
+    /**
+     * @return array
+     */
     public function mergeToRelationFields(): array
     {
         return [

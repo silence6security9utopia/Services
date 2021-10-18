@@ -62,7 +62,7 @@ interface IRepository
 
     /**
      * @param array $fields
-     * @return IMap
+     * @return IMap|null
      */
-    public function map(array $fields = []): IMap;
+    public function map(array $fields = []): ?IMap;
 }
