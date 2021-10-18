@@ -32,6 +32,11 @@ class Options implements IOptions
     protected bool $isRepository;
 
     /**
+     * @var IBelongsToMany|null
+     */
+    protected ?IBelongsToMany $belongsToManyOptions;
+
+    /**
      * @var bool
      */
     protected bool $isMany;
@@ -49,6 +54,7 @@ class Options implements IOptions
         $this->isRequire = $options[self::IS_REQUIRE] ?? false;
         $this->isRepository = $options[self::IS_REPOSITORY] ?? false;
         $this->isMany = $options[self::IS_MANY] ?? false;
+        $this->belongsToManyOptions = isset($options[self::BELONGS_TO_MANY])?new BelongsToManyOptions($options[self::BELONGS_TO_MANY]):null;
 
         $this->validate();
     }
@@ -132,5 +138,13 @@ class Options implements IOptions
     public function getRMethod(): ?string
     {
         return $this->methodModelRelation;
+    }
+
+    /**
+     * @return IBelongsToMany|null
+     */
+    public function getBelongsToManyOptions(): ?IBelongsToMany
+    {
+        return $this->belongsToManyOptions;
     }
 }

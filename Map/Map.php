@@ -3,6 +3,7 @@
 
 namespace Silence\Service\Map;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Silence\Service\Repository\IRepository;
@@ -21,6 +22,11 @@ class Map implements IMap
      * @var array
      */
     protected array $fields;
+
+    /**
+     * @var array
+     */
+    protected static array $modelWithRepo = [];
 
     /**
      * Map constructor.
@@ -51,7 +57,7 @@ class Map implements IMap
 
             return $this->isManyRelated($related)?
                 $this->collection($related):
-                Utils::getRepoInstanceClosure(get_class($this->repository))($related);
+                $this->hasOne($related);
         }
 
         if (!is_null($item = $model->getAttribute($field))) {
@@ -62,12 +68,36 @@ class Map implements IMap
     }
 
     /**
-     * @param $collection
+     * @param $hasOne
+     * @return Model|null
+     */
+    protected function hasOne($hasOne): ?Model
+    {
+        return ((!is_null($repoClass = $this->getRepositoryByModel($hasOne->getModel())))?
+            Utils::getRepoInstanceClosure($repoClass)($hasOne->getResults()):
+            $hasOne->getResults());
+    }
+
+    /**
+     * @param HasMany|BelongsToMany $collection
      * @return Page
      */
     protected function collection($collection): Page
     {
-        return (new Pages($collection->getQuery(), Utils::getRepoInstanceClosure(get_class($this->repository)), 100))->getPage();
+        return (new Pages(
+            $collection->getQuery(),
+            100,
+            ((!is_null($repoClass = $this->getRepositoryByModel($collection->getModel())))?Utils::getRepoInstanceClosure($repoClass):null)
+        ))->getPage();
+    }
+
+    /**
+     * @param Model $model
+     * @return string|null
+     */
+    protected function getRepositoryByModel(Model $model): ?string
+    {
+        return array_key_exists($class = get_class($model), static::$modelWithRepo)?static::$modelWithRepo[$class]:null;
     }
 
     /**
@@ -79,14 +109,34 @@ class Map implements IMap
         return ($relation instanceof HasMany || $relation instanceof BelongsToMany);
     }
 
+    /**
+     * @return array
+     */
     public function toArray(): array
     {
+        $model = $this->repository->getModel();
 
+        $base = $model->toArray();
+
+        foreach ($this->mergeToRelationFields() as $relation) {
+            if (!array_key_exists($relation, $base)) {
+                $related = $model->{$relation}();
+
+                if ($this->isManyRelated($related)) {
+                    $base[$relation] = $this->collection($related);
+                } else {
+                    $base[$relation] = (($resModel = $this->hasOne($related)) instanceof Model)?$resModel->toArray():null;
+                }
+            }
+        }
+
+        return $base;
     }
 
     public function mergeToRelationFields(): array
     {
         return [
+            //
         ];
     }
 }

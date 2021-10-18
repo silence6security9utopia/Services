@@ -148,7 +148,7 @@ abstract class Repository implements IRepository
         switch ($option) {
             case self::ALL:
                 return function (Builder $query) {
-                    return (new Pages($query, Utils::getRepoInstanceClosure(static::class), $this->limit))->getPage();
+                    return (new Pages($query, $this->limit, Utils::getRepoInstanceClosure(static::class)))->getPage();
                 };
             case self::ONE:
                 return function (Builder $query) {

@@ -6,6 +6,7 @@ namespace Silence\Service\Repository\Attach;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\DB;
 use Silence\Service\Repository\IRepository;
 use Silence\Service\Repository\Repository;
@@ -170,19 +171,28 @@ class AttachHandler
     {
         $options = $processArgs->options();
         $data = $processArgs->getData();
+        $btmOptions = $options->getBelongsToManyOptions();
 
         $model = $this->makeModel($modelClass = $processArgs->getEntity());
 
         $relationMethod = (!is_null($method = $options->getRMethod()) && method_exists($model, $method))?$method:(string) $options->getSection();
 
         $relation = $this->rootModel->{$relationMethod}();
+        $models = [];
 
         if ($options->isMany()) {
-            $relation->saveMany(array_map(function ($arrayData) use ($modelClass) {
+            $models = $relation->saveMany(array_map(function ($arrayData) use ($modelClass) {
                 return ($this->makeModel($modelClass))->fill($arrayData);
             }, $data));
         } else {
-            $relation->save($model->fill($data));
+            $models[] = $relation->save($model->fill($data));
+        }
+
+        if ($btmOptions) {
+            /** @var BelongsToMany $btm */
+            $btm = $this->rootModel->{$btmOptions->getMethod()}();
+
+            $btm->saveMany($models);
         }
     }
 
@@ -195,21 +205,38 @@ class AttachHandler
         $data = $processArgs->getData();
         $options = $processArgs->options();
         $repoClass = $processArgs->getEntity();
+        $btmOptions = $options->getBelongsToManyOptions();
 
         if (is_null($fk = $options->getFk())) {
             throw new AttachException('Options Foreign key is require for repository ('.$repoClass.')');
         }
 
         $rootId = $this->rootModel->id;
+        $models = [];
 
         if ($options->isMany()) {
             foreach ($data as $v) {
                 $v[$fk] = $rootId;
-                $this->makeRepository($repoClass)->insert($v);
+
+                $repo = $this->makeRepository($repoClass);
+                $repo->insert($v);
+
+                $models[] = $repo->getModel();
             }
         } else {
             $dataSection[$fk] = $rootId;
-            $this->makeRepository($repoClass)->insert($dataSection);
+
+            $repo = $this->makeRepository($repoClass);
+            $repo->insert($dataSection);
+
+            $models[] = $repo->getModel();
+        }
+
+        if ($btmOptions) {
+            /** @var BelongsToMany $btm */
+            $btm = $this->rootModel->{$btmOptions->getMethod()}();
+
+            $btm->saveMany($models);
         }
     }
 

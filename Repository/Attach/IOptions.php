@@ -37,6 +37,11 @@ interface IOptions
     public const FK = 15;
 
     /**
+     *
+     */
+    public const BELONGS_TO_MANY = 17;
+
+    /**
      * @return int|string
      */
     public function getSection();
@@ -65,4 +70,9 @@ interface IOptions
      * @return string|null
      */
     public function getRMethod(): ?string;
+
+    /**
+     * @return IBelongsToMany|null
+     */
+    public function getBelongsToManyOptions(): ?IBelongsToMany;
 }
