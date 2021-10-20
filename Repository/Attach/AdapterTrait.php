@@ -18,10 +18,6 @@ trait AdapterTrait
      */
     protected function attach(array $data, \Closure $rootModel, int $process, callable $rejectCallback)
     {
-        if (empty(static::$relations)) {
-            return;
-        }
-
         AttachHandler::processAttach($data, $rootModel, static::$relations, $process, $rejectCallback);
     }
 }
