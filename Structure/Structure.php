@@ -66,10 +66,21 @@ abstract class Structure
      * @param string $property
      * @param $value
      * @return bool
+     * @throws StructureException
+     * @throws \ReflectionException
      */
     protected function setProperty(string $property, $value): bool
     {
         if (property_exists($this, $property)) {
+
+            $refProperty = new \ReflectionProperty($this, $property);
+
+            if ($type = $refProperty->getType()) {
+                if (($vType = gettype($value)) !== (string)$type) {
+                    $this->throwException(sprintf("Try to set property %s.Property must be typeof %s, %s give", $property, $type, $vType));
+                }
+            }
+
             $this->{$property} = $value;
 
             return true;
