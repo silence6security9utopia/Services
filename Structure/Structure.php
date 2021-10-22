@@ -27,24 +27,41 @@ abstract class Structure
      */
     protected function processSetParams(array $data)
     {
-        foreach ($data as $property => $value) {
+        try {
+            foreach ($data as $property => $value) {
 
-            if ($this->setMethod($property, $value)) {
-                continue;
+                if ($this->setMethod($property, $value)) {
+                    continue;
+                }
+
+
+                if ($this->setProperty($property, $value)) {
+                    continue;
+                }
+
+                $this->throwException(sprintf('Trying to set an unknown property %s', $property));
             }
 
-
-            if ($this->setProperty($property, $value)) {
-                continue;
-            }
-
-            $this->throwException(sprintf('Trying to set an unknown property %s', $property));
+            $this->checkSatedProperty();
+            $this->validate();
+        } catch (\TypeError $e) {
+            $this->throwException($e->getMessage());
         }
-
-        $this->validate();
     }
 
-
+    /**
+     * @throws StructureException
+     */
+    protected function checkSatedProperty()
+    {
+        $properties = (new \ReflectionClass($this))
+            ->getProperties(\ReflectionProperty::IS_PUBLIC);
+        foreach ($properties as $property) {
+            if (!$property->isInitialized($this)) {
+                $this->throwException(sprintf('Property is require [%s]', $property->name));
+            }
+        }
+    }
 
     /**
      * @param string $property
@@ -72,15 +89,6 @@ abstract class Structure
     protected function setProperty(string $property, $value): bool
     {
         if (property_exists($this, $property)) {
-
-            $refProperty = new \ReflectionProperty($this, $property);
-
-            if ($type = $refProperty->getType()) {
-                if (($vType = gettype($value)) !== (string)$type) {
-                    $this->throwException(sprintf("Try to set property %s.Property must be typeof %s, %s give", $property, $type, $vType));
-                }
-            }
-
             $this->{$property} = $value;
 
             return true;
